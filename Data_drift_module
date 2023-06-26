@@ -1,0 +1,97 @@
+import numpy as np
+from scipy.stats import ks_2samp, entropy
+from scipy.spatial.distance import wasserstein_distance
+from sklearn.metrics import mutual_info_score
+from sklearn.inspection import permutation_importance
+
+
+class DataDriftDetector:
+    def __init__(self, previous_data):
+        self.previous_data = previous_data
+
+    def calculate_kl_divergence(self, new_data):
+        return entropy(self.previous_data, new_data)
+
+    def calculate_ks_statistics(self, new_data):
+        return ks_2samp(self.previous_data, new_data).statistic
+
+    def calculate_wasserstein_distance(self, new_data):
+        return wasserstein_distance(self.previous_data, new_data)
+
+    def perform_hypothesis_test(self, new_data):
+        # Perform your hypothesis test here
+        # and return the p-value or any other relevant statistic
+        return p_value
+
+    def calculate_running_statistics(self, new_data, previous_stats=None):
+        if previous_stats is None:
+            previous_stats = {}
+
+        current_stats = {}
+
+        # Calculate running statistics (e.g., mean, variance, etc.)
+        # based on the new data and previous statistics
+
+        return current_stats
+
+    def calculate_feature_importance_shift(self, new_data, model):
+        model.fit(self.previous_data, new_data)
+        baseline_importance = permutation_importance(model, self.previous_data, new_data)['importances_mean']
+
+        # Perturb the feature values in x and calculate the new importance scores
+        perturbed_x = perturb_features(self.previous_data)
+        perturbed_importance = permutation_importance(model, perturbed_x, new_data)['importances_mean']
+
+        feature_importance_shift = np.abs(baseline_importance - perturbed_importance)
+        return feature_importance_shift
+
+    def calculate_population_stability_index(self, new_data):
+        psi = np.sum(np.sqrt(self.previous_data * new_data))
+        return psi
+
+    def calculate_histogram_intersection(self, new_data):
+        intersection = np.minimum(self.previous_data, new_data)
+        return np.sum(intersection)
+
+
+class DriftUtils:
+    @staticmethod
+    def perturb_features(data):
+        # Perform feature perturbation on the data
+        return perturbed_data
+
+
+# Example usage
+previous_data = np.random.normal(0, 1, size=(1000,))
+new_data = np.random.normal(0.5, 1.2, size=(1000,))
+
+# Create a DataDriftDetector instance
+detector = DataDriftDetector(previous_data)
+
+# Calculate drift using KL divergence
+kl_divergence = detector.calculate_kl_divergence(new_data)
+
+# Calculate drift using KS statistics
+ks_statistic = detector.calculate_ks_statistics(new_data)
+
+# Calculate drift using Wasserstein distance
+wasserstein_dist = detector.calculate_wasserstein_distance(new_data)
+
+# Perform hypothesis test
+p_value = detector.perform_hypothesis_test(new_data)
+
+# Calculate running statistics
+previous_stats = detector.calculate_running_statistics(new_data)
+current_stats = detector.calculate_running_statistics(new_data, previous_stats)
+
+# Calculate feature importance shift
+from sklearn.ensemble import RandomForestClassifier
+
+model = RandomForestClassifier()
+feature_importance_shift = detector.calculate_feature_importance_shift(new_data, model)
+
+# Calculate population stability index
+psi = detector.calculate_population_stability_index(new_data)
+
+# Calculate histogram intersection
+hist_intersection = detector.calculate_histogram_intersection(new_data)
