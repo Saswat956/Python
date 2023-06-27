@@ -1,20 +1,56 @@
 import spacy
+import random
+from spacy.util import minibatch, compounding
 
-def extract_entities(paragraph):
-    nlp = spacy.load("en_core_web_sm")
-    doc = nlp(paragraph)
+def train_custom_ner(training_data, iterations):
+    nlp = spacy.blank('en')  # Create a blank spaCy model
+    ner = nlp.create_pipe('ner')  # Create a new NER pipe
+    nlp.add_pipe(ner, last=True)
 
-    entities = []
-    for entity in doc.ents:
-        entities.append({
-            'text': entity.text,
-            'label': entity.label_
-        })
+    # Add your custom entity label
+    ner.add_label('PRODUCT')
 
-    return entities
+    # Generate the training examples
+    examples = []
+    for text, annotations in training_data:
+        examples.append(spacy.training.Example.from_dict(nlp.make_doc(text), annotations))
+
+    # Disable other pipeline components during training
+    pipe_exceptions = ['ner', 'trf_wordpiecer', 'trf_tok2vec']
+    unaffected_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
+
+    # Train the model
+    with nlp.disable_pipes(*unaffected_pipes):
+        optimizer = nlp.begin_training()
+        for itn in range(iterations):
+            random.shuffle(examples)
+            losses = {}
+            batches = minibatch(examples, size=compounding(4.0, 32.0, 1.001))
+            for batch in batches:
+                texts, annotations = zip(*batch)
+                nlp.update(texts, annotations, sgd=optimizer, drop=0.35, losses=losses)
+            print(f'Iteration {itn+1} Losses:', losses)
+
+    return nlp
 
 # Example usage:
-paragraph = "Apple Inc. was founded by Steve Jobs and Steve Wozniak in 1976. It is headquartered in Cupertino, California."
-entities = extract_entities(paragraph)
-for entity in entities:
-    print(entity['text'], entity['label'])
+training_data = [
+    ("I bought a new iPhone.", {'entities': [(16, 22, 'PRODUCT')]}),
+    ("The Samsung Galaxy S20 is a popular phone.", {'entities': [(4, 23, 'PRODUCT')]}),
+    ("I love my MacBook Pro.", {'entities': [(12, 24, 'PRODUCT')]}),
+    # Add more training examples here
+]
+iterations = 10
+custom_ner_model = train_custom_ner(training_data, iterations)
+
+
+
+def extract_custom_entity(text, nlp_model):
+    doc = nlp_model(text)
+    entities = []
+    for entity in doc.ents:
+        if entity.label_ == 'PRODUCT':
+            entities.append(entity
+
+
+
