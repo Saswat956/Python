@@ -1,0 +1,124 @@
+import numpy as np
+
+def compute_statistical_parity_difference(y_true, y_pred, protected_attribute):
+    # Compute overall positive rate and positive rate for the privileged and unprivileged groups
+    overall_positive_rate = np.mean(y_pred)
+    privileged_group_indices = np.where(protected_attribute == 1)[0]
+    unprivileged_group_indices = np.where(protected_attribute == 0)[0]
+    privileged_positive_rate = np.mean(y_pred[privileged_group_indices])
+    unprivileged_positive_rate = np.mean(y_pred[unprivileged_group_indices])
+
+    # Compute statistical parity difference
+    spd = unprivileged_positive_rate - privileged_positive_rate
+
+    return spd
+
+# Example usage
+y_true = np.array([0, 0, 1, 1])
+y_pred = np.array([0, 1, 0, 1])
+protected_attribute = np.array([0, 0, 1, 1])
+
+spd = compute_statistical_parity_difference(y_true, y_pred, protected_attribute)
+print("Statistical Parity Difference:", spd)
+———————————————-
+import numpy as np
+from sklearn.metrics import confusion_matrix
+
+def compute_disparate_impact(y_true, y_pred, protected_attribute):
+    # Compute confusion matrix
+    conf_matrix = confusion_matrix(y_true, y_pred)
+    tn, fp, fn, tp = conf_matrix.ravel()
+    
+    # Compute positive prediction rate for the privileged and unprivileged groups
+    privileged_group_indices = np.where(protected_attribute == 1)[0]
+    unprivileged_group_indices = np.where(protected_attribute == 0)[0]
+    
+    privileged_group_tp = np.sum(tp[privileged_group_indices])
+    privileged_group_fp = np.sum(fp[privileged_group_indices])
+    unprivileged_group_tp = np.sum(tp[unprivileged_group_indices])
+    unprivileged_group_fp = np.sum(fp[unprivileged_group_indices])
+    
+    privileged_ppr = privileged_group_tp / (privileged_group_tp + privileged_group_fp + 1e-10)
+    unprivileged_ppr = unprivileged_group_tp / (unprivileged_group_tp + unprivileged_group_fp + 1e-10)
+    
+    # Compute disparate impact
+    disparate_impact = unprivileged_ppr / (privileged_ppr + 1e-10)
+    
+    return disparate_impact
+
+# Example usage
+y_true = np.array([0, 0, 1, 1])
+y_pred = np.array([0, 1, 0, 1])
+protected_attribute = np.array([0, 0, 1, 1])
+
+disparate_impact = compute_disparate_impact(y_true, y_pred, protected_attribute)
+print("Disparate Impact:", disparate_impact)
+——————————————————
+import numpy as np
+from sklearn.metrics import confusion_matrix
+
+def compute_equal_opportunity_difference(y_true, y_pred, protected_attribute):
+    # Compute confusion matrix
+    conf_matrix = confusion_matrix(y_true, y_pred)
+    tn, fp, fn, tp = conf_matrix.ravel()
+
+    # Compute true positive rates for the privileged and unprivileged groups
+    privileged_group_indices = np.where(protected_attribute == 1)[0]
+    unprivileged_group_indices = np.where(protected_attribute == 0)[0]
+
+    privileged_group_tp = np.sum(tp[privileged_group_indices])
+    privileged_group_fn = np.sum(fn[privileged_group_indices])
+    unprivileged_group_tp = np.sum(tp[unprivileged_group_indices])
+    unprivileged_group_fn = np.sum(fn[unprivileged_group_indices])
+
+    privileged_tpr = privileged_group_tp / (privileged_group_tp + privileged_group_fn + 1e-10)
+    unprivileged_tpr = unprivileged_group_tp / (unprivileged_group_tp + unprivileged_group_fn + 1e-10)
+
+    # Compute equal opportunity difference
+    eod = unprivileged_tpr - privileged_tpr
+
+    return eod
+
+# Example usage
+y_true = np.array([0, 0, 1, 1])
+y_pred = np.array([0, 1, 0, 1])
+protected_attribute = np.array([0, 0, 1, 1])
+
+eod = compute_equal_opportunity_difference(y_true, y_pred, protected_attribute)
+print("Equal Opportunity Difference:", eod)
+—————————————————
+import numpy as np
+from sklearn.metrics import confusion_matrix
+
+def compute_average_odds_difference(y_true, y_pred, protected_attribute):
+    # Compute confusion matrix
+    conf_matrix = confusion_matrix(y_true, y_pred)
+    tn, fp, fn, tp = conf_matrix.ravel()
+
+    # Compute true positive rates and false positive rates for the privileged and unprivileged groups
+    privileged_group_indices = np.where(protected_attribute == 1)[0]
+    unprivileged_group_indices = np.where(protected_attribute == 0)[0]
+
+    privileged_group_tp = np.sum(tp[privileged_group_indices])
+    privileged_group_fp = np.sum(fp[privileged_group_indices])
+    unprivileged_group_tp = np.sum(tp[unprivileged_group_indices])
+    unprivileged_group_fp = np.sum(fp[unprivileged_group_indices])
+
+    privileged_tpr = privileged_group_tp / (privileged_group_tp + privileged_group_fn + 1e-10)
+    privileged_fpr = privileged_group_fp / (privileged_group_fp + privileged_group_tn + 1e-10)
+    unprivileged_tpr = unprivileged_group_tp / (unprivileged_group_tp + unprivileged_group_fn + 1e-10)
+    unprivileged_fpr = unprivileged_group_fp / (unprivileged_group_fp + unprivileged_group_tn + 1e-10)
+
+    # Compute average odds difference
+    aod = 0.5 * ((unprivileged_fpr - privileged_fpr) + (unprivileged_tpr - privileged_tpr))
+
+    return aod
+
+# Example usage
+y_true = np.array([0, 0, 1, 1])
+y_pred = np.array([0, 1, 0, 1])
+protected_attribute = np.array([0, 0, 1, 1])
+
+aod = compute_average_odds_difference(y_true, y_pred, protected_attribute)
+print("Average Odds Difference:", aod)
+———————————————————
