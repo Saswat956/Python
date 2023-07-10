@@ -1,0 +1,22 @@
+Analyze the provided document and identify the date of admission for the patient. Add the patient's basic details to it.
+
+Please note that the document may contain various types of information, such as patient demographics, medical history, procedures, treatments, and relevant events. Your task is to locate and extract the date of admission from the document.
+
+If the date of admission is mentioned in the document, provide the date in a clear and organized format. Include any description or context provided in the document to enhance the summary. If the date of admission is missing or not mentioned in the document, indicate "NA".
+
+Additionally, if possible, provide any other relevant information related to the admission, such as the reason for admission or any accompanying details.
+
+Please proceed with the analysis and provide the date of admission for the patient, along with any additional relevant information, or indicate "NA" if not mentioned.
+
+
+
+Analyze the provided document and identify the date of discharge for the patient. Add the patient's basic details to it.
+
+Please note that the document may contain various types of information, such as patient demographics, medical history, procedures, treatments, and relevant events. Your task is to locate and extract the date of discharge from the document.
+
+If the date of discharge is mentioned in the document, provide the date in a clear and organized format. Include any description or context provided in the document to enhance the summary. If the date of discharge is missing or not mentioned in the document, indicate "NA".
+
+Additionally, if possible, provide any other relevant information related to the discharge, such as the reason for discharge or any accompanying details.
+
+Please proceed with the analysis and provide the date of discharge for the patient, along with any additional relevant information, or indicate "NA" if not mentioned.
+
