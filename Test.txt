@@ -1,22 +1,38 @@
-Analyze the provided document and identify the date of admission for the patient. Add the patient's basic details to it.
+from datetime import datetime
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator
 
-Please note that the document may contain various types of information, such as patient demographics, medical history, procedures, treatments, and relevant events. Your task is to locate and extract the date of admission from the document.
+def run_script_y():
+    # Code to run when the parameter is set to "Y"
+    print("Running script Y")
 
-If the date of admission is mentioned in the document, provide the date in a clear and organized format. Include any description or context provided in the document to enhance the summary. If the date of admission is missing or not mentioned in the document, indicate "NA".
+def run_script_n():
+    # Code to run when the parameter is set to "N"
+    print("Running script N")
 
-Additionally, if possible, provide any other relevant information related to the admission, such as the reason for admission or any accompanying details.
+default_args = {
+    'start_date': datetime(2023, 7, 12),
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5)
+}
 
-Please proceed with the analysis and provide the date of admission for the patient, along with any additional relevant information, or indicate "NA" if not mentioned.
+dag = DAG('run_scripts_based_on_parameter', default_args=default_args, schedule_interval=None)
 
+def choose_script(**context):
+    parameter_value = context['dag_run'].conf.get('parameter_value')
+    if parameter_value == 'Y':
+        run_script_y()
+    elif parameter_value == 'N':
+        run_script_n()
+    else:
+        raise ValueError("Invalid parameter value. Expected 'Y' or 'N'.")
 
+task = PythonOperator(
+    task_id='choose_script_task',
+    python_callable=choose_script,
+    provide_context=True,
+    dag=dag
+)
 
-Analyze the provided document and identify the date of discharge for the patient. Add the patient's basic details to it.
-
-Please note that the document may contain various types of information, such as patient demographics, medical history, procedures, treatments, and relevant events. Your task is to locate and extract the date of discharge from the document.
-
-If the date of discharge is mentioned in the document, provide the date in a clear and organized format. Include any description or context provided in the document to enhance the summary. If the date of discharge is missing or not mentioned in the document, indicate "NA".
-
-Additionally, if possible, provide any other relevant information related to the discharge, such as the reason for discharge or any accompanying details.
-
-Please proceed with the analysis and provide the date of discharge for the patient, along with any additional relevant information, or indicate "NA" if not mentioned.
-
+# Define the dependencies
+task
