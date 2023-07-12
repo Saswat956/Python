@@ -1,38 +1,53 @@
-from datetime import datetime
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python_operator import BranchPythonOperator
+from airflow.operators.dummy_operator import DummyOperator
+from datetime import datetime
 
-def run_script_y():
-    # Code to run when the parameter is set to "Y"
-    print("Running script Y")
+def condition_func(**kwargs):
+    condition = kwargs['dag_run'].conf.get('condition')  # Get the condition from the DAG run conf
 
-def run_script_n():
-    # Code to run when the parameter is set to "N"
-    print("Running script N")
-
-default_args = {
-    'start_date': datetime(2023, 7, 12),
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5)
-}
-
-dag = DAG('run_scripts_based_on_parameter', default_args=default_args, schedule_interval=None)
-
-def choose_script(**context):
-    parameter_value = context['dag_run'].conf.get('parameter_value')
-    if parameter_value == 'Y':
-        run_script_y()
-    elif parameter_value == 'N':
-        run_script_n()
+    if condition == 'Y':
+        return 'step1'
+    elif condition == 'N':
+        return 'step1'
     else:
-        raise ValueError("Invalid parameter value. Expected 'Y' or 'N'.")
+        return 'default'
 
-task = PythonOperator(
-    task_id='choose_script_task',
-    python_callable=choose_script,
-    provide_context=True,
-    dag=dag
-)
+def create_dag():
+    dag = DAG(
+        'conditional_steps',
+        description='Example DAG with conditional steps',
+        schedule_interval=None,
+        start_date=datetime(2023, 7, 12),
+    )
 
-# Define the dependencies
-task
+    # Define the condition task
+    condition_task = BranchPythonOperator(
+        task_id='condition_task',
+        provide_context=True,
+        python_callable=condition_func,
+        dag=dag,
+    )
+
+    # Define the dummy tasks for each step
+    step1 = DummyOperator(task_id='step1', dag=dag)
+    step2 = DummyOperator(task_id='step2', dag=dag)
+    step3 = DummyOperator(task_id='step3', dag=dag)
+    step4 = DummyOperator(task_id='step4', dag=dag)
+    default = DummyOperator(task_id='default', dag=dag)
+
+    # Set up the dependencies based on the condition
+    step1 >> condition_task
+
+    condition_task >> step2
+    condition_task >> step3
+    condition_task >> default
+
+    step2 >> step4
+    step3 >> step4
+    default >> step4
+
+    return dag
+
+dag = create_dag()
+
