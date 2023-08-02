@@ -1,204 +1,35 @@
-import numpy as np
-from scipy.special import kl_div
+import streamlit as st
 
-def calculate_kl_divergence(p, q):
-    return kl_div(p, q).sum()
+# Define the correct credentials
+correct_user_id = 'your_user_id'
+correct_password = 'your_password'
 
-def calculate_data_distribution(data):
-    unique_values, counts = np.unique(data, return_counts=True)
-    return counts / counts.sum()
+def main():
+    st.title("Login Page")
 
-def detect_data_drift(data1, data2, threshold):
-    distribution1 = calculate_data_distribution(data1)
-    distribution2 = calculate_data_distribution(data2)
-    
-    kl_divergence = calculate_kl_divergence(distribution1, distribution2)
-    
-    if kl_divergence > threshold:
-        print("Data drift detected!")
-        print("KL Divergence:", kl_divergence)
-    else:
-        print("No data drift detected.")
+    # Get user inputs
+    user_id = st.text_input("User ID")
+    password = st.text_input("Password", type="password")
 
-# Example usage
-data1 = np.random.randint(0, 10, size=1000)
-data2 = np.random.randint(0, 10, size=1000)
+    if st.button("Login"):
+        if user_id == correct_user_id and password == correct_password:
+            st.success("Logged in successfully!")
+            # Add your main application logic or redirect to another page after successful login
+            # Reroute to another page by triggering a reload of the app with different arguments
+            st.experimental_rerun("rerun_key")
+        else:
+            st.error("Invalid credentials. Please try again.")
 
-threshold = 0.1
+if __name__ == "__main__":
+    main()
 
-detect_data_drift(data1, data2, threshold)
 
-__________________________________________________
+import streamlit as st
 
-from scipy.stats import ks_2samp
+def main():
+    st.title("Main Application Page")
+    # Add your main application logic here
 
-def detect_data_drift(data1, data2, alpha):
-    """Detect data drift between two datasets using KS statistic."""
-    stat, p_value = ks_2samp(data1, data2)
-    return p_value < alpha
-
-# Example usage:
-data1 = [0.2, 0.3, 0.5]  # Dataset 1
-data2 = [0.1, 0.4, 0.5]  # Dataset 2
-alpha = 0.05  # Significance level for data drift detection
-
-is_drift = detect_data_drift(data1, data2, alpha)
-if is_drift:
-    print("Data drift detected!")
-else:
-    print("No data drift.")
-
-__________________________________________________
-
-import numpy as np
-from scipy.stats import wasserstein_distance
-
-def detect_data_drift(data1, data2, epsilon):
-    """Detect data drift between two datasets using Wasserstein distance."""
-    wasserstein_dist = wasserstein_distance(data1, data2)
-    return wasserstein_dist > epsilon
-
-# Example usage:
-data1 = np.array([0.2, 0.3, 0.5])  # Dataset 1
-data2 = np.array([0.1, 0.4, 0.5])  # Dataset 2
-epsilon = 0.1  # Threshold for data drift detection
-
-is_drift = detect_data_drift(data1, data2, epsilon)
-if is_drift:
-    print("Data drift detected!")
-else:
-    print("No data drift.")
-
-__________________________________________________
-
-import numpy as np
-
-class DataDriftDetector:
-    def __init__(self, alpha, threshold):
-        self.alpha = alpha  # Smoothing factor
-        self.threshold = threshold  # Threshold for data drift detection
-        self.mean_estimate = None
-
-    def detect_data_drift(self, data):
-        """Detect data drift using exponentially weighted moving average (EWMA)."""
-        if self.mean_estimate is None:
-            self.mean_estimate = np.mean(data)
-            return False
-
-        prev_mean = self.mean_estimate
-        self.mean_estimate = self.alpha * data.mean() + (1 - self.alpha) * prev_mean
-        drift = np.abs(self.mean_estimate - prev_mean) > self.threshold
-        return drift
-
-# Example usage:
-data = np.array([1.2, 1.4, 1.6, 1.8, 2.0, 5.0, 5.2, 5.4, 5.6, 5.8])  # Data stream
-alpha = 0.2  # Smoothing factor
-threshold = 0.5  # Threshold for data drift detection
-
-drift_detector = DataDriftDetector(alpha, threshold)
-for i in range(len(data)):
-    is_drift = drift_detector.detect_data_drift(data[i])
-    if is_drift:
-        print("Data drift detected at index", i)
-_________________________________________________
-
-import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.inspection import permutation_importance
-
-class DataDriftDetector:
-    def __init__(self, model):
-        self.model = model
-        self.importance_baseline = None
-
-    def compute_feature_importance(self, X, y):
-        """Compute feature importance using a machine learning model."""
-        self.model.fit(X, y)
-        importance = permutation_importance(self.model, X, y, n_repeats=10, random_state=42)
-        return importance.importances_mean
-
-    def detect_data_drift(self, X1, X2, threshold):
-        """Detect data drift based on feature importance shift."""
-        if self.importance_baseline is None:
-            self.importance_baseline = self.compute_feature_importance(X1, np.ones(len(X1)))
-            return False
-
-        importance_current = self.compute_feature_importance(X2, np.ones(len(X2)))
-        drift = np.abs(self.importance_baseline - importance_current) > threshold
-        return drift
-
-# Example usage:
-X1 = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])  # Feature matrix for dataset 1
-X2 = np.array([[2, 3, 4], [5, 6, 7], [8, 9, 10]])  # Feature matrix for dataset 2
-threshold = 0.1  # Threshold for feature importance shift detection
-
-model = RandomForestClassifier(n_estimators=100, random_state=42)
-drift_detector = DataDriftDetector(model)
-is_drift = drift_detector.detect_data_drift(X1, X2, threshold)
-if is_drift:
-    print("Data drift detected!")
-else:
-    print("No data drift.")
-
-__________________________________________________
-import numpy as np
-
-def calculate_psi(expected, actual, bins=10):
-    """Calculate Population Stability Index (PSI) between expected and actual distributions."""
-    expected_counts, _ = np.histogram(expected, bins=bins)
-    actual_counts, _ = np.histogram(actual, bins=bins)
-    expected_prop = expected_counts / len(expected)
-    actual_prop = actual_counts / len(actual)
-    psi = np.sum((actual_prop - expected_prop) * np.log(actual_prop / expected_prop))
-    return psi
-
-def detect_data_drift(expected, actual, threshold):
-    """Detect data drift based on Population Stability Index (PSI)."""
-    psi = calculate_psi(expected, actual)
-    return psi > threshold
-
-# Example usage:
-expected_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  # Expected data distribution
-actual_data = [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5]  # Actual data distribution
-threshold = 0.1  # Threshold for data drift detection
-
-is_drift = detect_data_drift(expected_data, actual_data, threshold)
-if is_drift:
-    print("Data drift detected!")
-else:
-    print("No data drift.")
-
-__________________________________________________
-
-import numpy as np
-
-def calculate_histogram_intersection(hist1, hist2):
-    """Calculate Histogram Intersection between two histograms."""
-    min_values = np.minimum(hist1, hist2)
-    intersection = np.sum(min_values)
-    return intersection
-
-def normalize_histogram(hist):
-    """Normalize histogram values to sum up to 1."""
-    return hist / np.sum(hist)
-
-def detect_data_drift(hist1, hist2, threshold):
-    """Detect data drift based on Histogram Intersection."""
-    intersection = calculate_histogram_intersection(hist1, hist2)
-    return intersection < threshold
-
-# Example usage:
-histogram1 = np.array([10, 20, 30, 40, 50])  # Histogram 1
-histogram2 = np.array([15, 25, 35, 45, 55])  # Histogram 2
-threshold = 0.9  # Threshold for data drift detection
-
-normalized_hist1 = normalize_histogram(histogram1)
-normalized_hist2 = normalize_histogram(histogram2)
-
-is_drift = detect_data_drift(normalized_hist1, normalized_hist2, threshold)
-if is_drift:
-    print("Data drift detected!")
-else:
-    print("No data drift.")
-
-__________________________________________________
+if __name__ == "__main__":
+    main()
+streamlit run login_app.py -- -rerun_key 1
