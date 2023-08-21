@@ -1,5 +1,37 @@
-This is line1
-This is line2
-This is line3
-This is line4
-This is line5
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
+import random
+
+# Create a Spark session
+spark = SparkSession.builder.appName("CategoricalDownsampling").getOrCreate()
+
+# Assuming you have a DataFrame named 'df' with the columns you mentioned
+
+# Define the fractions for downsampling
+fractions = {
+    ('age_brackets_value1', 'cat_rndrg_prov_txnmy_cd_value1', 'binary_label_value1'): 0.2,
+    ('age_brackets_value1', 'cat_rndrg_prov_txnmy_cd_value1', 'binary_label_value2'): 0.5,
+    # Define more fractions for other combinations as needed
+}
+
+# Convert the fractions dictionary to a dictionary of condition strings with weights
+weighted_conditions = [
+    (f"(age_brackets == '{age}' AND cat_rndrg_prov_txnmy_cd == '{cat}' AND binary_label == '{label}')", weight)
+    for (age, cat, label), weight in fractions.items()
+]
+
+# Create a function to sample based on weighted conditions
+def weighted_sampling(row):
+    for condition, weight in weighted_conditions:
+        if random.random() <= weight and eval(condition):
+            return True
+    return False
+
+# Apply the weighted sampling function to filter the DataFrame
+sampled_df = df.filter(weighted_sampling)
+
+# Show the sampled DataFrame
+sampled_df.show()
+
+# Stop the Spark session
+spark.stop()
