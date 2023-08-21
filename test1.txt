@@ -1,31 +1,24 @@
-from pyspark.sql import SparkSession
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# Create a Spark session
-spark = SparkSession.builder.appName("CategoricalDownsampling").getOrCreate()
+# Assuming you have two datasets as lists or NumPy arrays
+data1 = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65]
+data2 = [25, 28, 30, 32, 35, 38, 40, 42, 45, 48, 50]
 
-# Assuming you have a DataFrame named 'df' with the columns you mentioned
+# Create a figure and axis
+fig, ax = plt.subplots()
 
-# Define the fractions for downsampling
-fractions = {
-    ('age_brackets_value1', 'cat_rndrg_prov_txnmy_cd_value1', 'binary_label_value1'): 0.2,
-    ('age_brackets_value1', 'cat_rndrg_prov_txnmy_cd_value1', 'binary_label_value2'): 0.5,
-    # Define more fractions for other combinations as needed
-}
+# Plot the distributions using seaborn
+sns.histplot(data1, kde=True, color='blue', label='Dataset 1', ax=ax)
+sns.histplot(data2, kde=True, color='red', label='Dataset 2', ax=ax)
 
-# Calculate the complementary fractions (1 - fraction) for the remaining combinations
-complementary_fractions = {
-    combination: 1.0 - fraction for combination, fraction in fractions.items()
-}
+# Add labels and a title
+plt.xlabel("Values")
+plt.ylabel("Density")
+plt.title("Overlay Distribution Plot of Two Datasets")
 
-# Combine fractions and complementary fractions into a single dictionary
-combined_fractions = fractions.copy()
-combined_fractions.update(complementary_fractions)
+# Add a legend
+plt.legend()
 
-# Use the sampleBy method to downsample based on the combined fractions
-sampled_df = df.sampleBy('age_brackets', 'cat_rndrg_prov_txnmy_cd', 'binary_label', fractions=combined_fractions)
-
-# Show the sampled DataFrame
-sampled_df.show()
-
-# Stop the Spark session
-spark.stop()
+# Show the plot
+plt.show()
