@@ -1,6 +1,4 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
-import random
 
 # Create a Spark session
 spark = SparkSession.builder.appName("CategoricalDownsampling").getOrCreate()
@@ -14,21 +12,17 @@ fractions = {
     # Define more fractions for other combinations as needed
 }
 
-# Convert the fractions dictionary to a dictionary of condition strings with weights
-weighted_conditions = [
-    (f"(age_brackets == '{age}' AND cat_rndrg_prov_txnmy_cd == '{cat}' AND binary_label == '{label}')", weight)
-    for (age, cat, label), weight in fractions.items()
-]
+# Calculate the complementary fractions (1 - fraction) for the remaining combinations
+complementary_fractions = {
+    combination: 1.0 - fraction for combination, fraction in fractions.items()
+}
 
-# Create a function to sample based on weighted conditions
-def weighted_sampling(row):
-    for condition, weight in weighted_conditions:
-        if random.random() <= weight and eval(condition):
-            return True
-    return False
+# Combine fractions and complementary fractions into a single dictionary
+combined_fractions = fractions.copy()
+combined_fractions.update(complementary_fractions)
 
-# Apply the weighted sampling function to filter the DataFrame
-sampled_df = df.filter(weighted_sampling)
+# Use the sampleBy method to downsample based on the combined fractions
+sampled_df = df.sampleBy('age_brackets', 'cat_rndrg_prov_txnmy_cd', 'binary_label', fractions=combined_fractions)
 
 # Show the sampled DataFrame
 sampled_df.show()
