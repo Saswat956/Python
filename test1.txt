@@ -1,39 +1,31 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
-def five_number_summary(data):
-    """
-    Calculate the five-number summary of a dataset.
+# Assuming you have two datasets as lists or NumPy arrays
+data1 = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65]
+data2 = [25, 28, 30, 32, 35, 38, 40, 42, 45, 48, 50]
 
-    Args:
-    data (list or numpy array): The dataset for which to calculate the summary.
+# Create a figure and axis
+fig, ax = plt.subplots()
 
-    Returns:
-    dict: A dictionary containing the minimum, first quartile (Q1), median (Q2), third quartile (Q3), and maximum.
-    """
-    # Ensure the data is sorted
-    sorted_data = np.sort(data)
+# Create a box plot for the two datasets side by side
+boxplot = ax.boxplot([data1, data2], labels=['Dataset 1', 'Dataset 2'])
 
-    # Calculate quartiles
-    q1 = np.percentile(sorted_data, 25)
-    q2 = np.median(sorted_data)
-    q3 = np.percentile(sorted_data, 75)
+# Add labels and a title
+ax.set_xlabel("Datasets")
+ax.set_ylabel("Values")
+ax.set_title("Box Plot Comparison of Two Datasets")
 
-    # Calculate minimum and maximum
-    min_val = sorted_data[0]
-    max_val = sorted_data[-1]
+# Calculate summary statistics
+stats1 = np.percentile(data1, [0, 25, 50, 75, 100])
+stats2 = np.percentile(data2, [0, 25, 50, 75, 100])
 
-    # Create a dictionary for the summary
-    summary = {
-        'Minimum': min_val,
-        'Q1 (First Quartile)': q1,
-        'Median (Q2)': q2,
-        'Q3 (Third Quartile)': q3,
-        'Maximum': max_val
-    }
+# Annotate the plot with summary statistics
+for i, stat in enumerate(stats1):
+    ax.text(i + 1, stat, f'{stat:.2f}', va='bottom', ha='center', fontsize=10, color='blue')
 
-    return summary
+for i, stat in enumerate(stats2):
+    ax.text(i + 2, stat, f'{stat:.2f}', va='bottom', ha='center', fontsize=10, color='red')
 
-# Example usage:
-data = [12, 16, 18, 22, 24, 25, 28, 30, 32, 36, 42]
-result = five_number_summary(data)
-print(result)
+# Show the plot
+plt.show()
