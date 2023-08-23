@@ -1,31 +1,41 @@
 import matplotlib.pyplot as plt
-import numpy as np
+from sklearn.metrics import roc_curve, auc
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
 
-# Assuming you have two datasets as lists or NumPy arrays
-data1 = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65]
-data2 = [25, 28, 30, 32, 35, 38, 40, 42, 45, 48, 50]
+# Generate synthetic data
+X, y = make_classification(n_samples=1000, n_features=20, random_state=42)
 
-# Create a figure and axis
-fig, ax = plt.subplots()
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Create a box plot for the two datasets side by side
-boxplot = ax.boxplot([data1, data2], labels=['Dataset 1', 'Dataset 2'])
+# Train a classifier (e.g., Logistic Regression)
+classifier = LogisticRegression()
+classifier.fit(X_train, y_train)
 
-# Add labels and a title
-ax.set_xlabel("Datasets")
-ax.set_ylabel("Values")
-ax.set_title("Box Plot Comparison of Two Datasets")
+# Predict probabilities
+y_prob = classifier.predict_proba(X_test)[:, 1]
 
-# Calculate summary statistics
-stats1 = np.percentile(data1, [0, 25, 50, 75, 100])
-stats2 = np.percentile(data2, [0, 25, 50, 75, 100])
+# Calculate ROC curve
+fpr, tpr, _ = roc_curve(y_test, y_prob)
 
-# Annotate the plot with summary statistics
-for i, stat in enumerate(stats1):
-    ax.text(i + 1, stat, f'{stat:.2f}', va='bottom', ha='center', fontsize=10, color='blue')
+# Calculate ROC AUC score
+roc_auc = auc(fpr, tpr)
 
-for i, stat in enumerate(stats2):
-    ax.text(i + 2, stat, f'{stat:.2f}', va='bottom', ha='center', fontsize=10, color='red')
+# Create ROC AUC plot
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC AUC = {roc_auc:.2f}')
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC AUC Curve')
+plt.legend(loc='lower right')
 
-# Show the plot
+# Add labels
+for i, threshold in enumerate([0.2, 0.5, 0.8]):
+    plt.annotate(f'Threshold = {threshold}', (fpr[i * 100], tpr[i * 100]), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=10)
+
 plt.show()
