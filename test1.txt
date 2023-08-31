@@ -1,23 +1,29 @@
-from aws_utilities.common.utils import sparkconfig, get_spark_session, snow_config, prettify
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
-def compare_lifts():
-    # Get a Spark session
-    spark = get_spark_session("lift comparison")
+def plot_comparison_box_and_distribution(datal, data2):
+    # Box plot
+    plt.figure(figsize=(8, 4))
+    plt.boxplot([datal, data2], labels=["Quarter 1", "Quarter 2"])
+    plt.xlabel("Datasets")
+    plt.ylabel("Values")
+    plt.title("Box plot for comparison of Q2 data with Q1 data")
+    plt.show()
 
-    # Define the size variable
-    size = "M"
+    # Overlay Distribution Plot
+    plt.figure(figsize=(8, 4))
+    sns.histplot(datal, kde=True, color='blue', label='Quarter 1')
+    sns.histplot(data2, kde=True, color='red', label='Quarter 2')
+    plt.xlabel("Values")
+    plt.ylabel("Density")
+    plt.title("Overlay Distribution Plot of Quarter 1 vs Quarter 2")
+    plt.legend()
+    plt.show()
 
-    # Load tables
-    dfQ1_lift = spark.table("database.xyz")
-    df02_lift = spark.table("database.pqr")
+# Sample data for datal and data2 (replace with your actual data)
+datal = [1, 2, 3, 4, 5]
+data2 = [2, 3, 4, 5, 6]
 
-    # Display count and column count
-    print("dfQ1_lift", dfQ1_lift.count(), len(dfQ1_lift.columns))
-    print("dfQ2_lift", df02_lift.count(), len(df02_lift.columns))
-
-    # Show the first 10 rows of the dataframes
-    dfQ1_lift.limit(10).show()
-    df02_lift.limit(10).show()
-
-# Call the function to execute the code
-compare_lifts()
+# Call the function with your data
+plot_comparison_box_and_distribution(datal, data2)
