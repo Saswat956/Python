@@ -1,41 +1,23 @@
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, auc
-from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
+from aws_utilities.common.utils import sparkconfig, get_spark_session, snow_config, prettify
 
-# Generate synthetic data
-X, y = make_classification(n_samples=1000, n_features=20, random_state=42)
+def compare_lifts():
+    # Get a Spark session
+    spark = get_spark_session("lift comparison")
 
-# Split data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    # Define the size variable
+    size = "M"
 
-# Train a classifier (e.g., Logistic Regression)
-classifier = LogisticRegression()
-classifier.fit(X_train, y_train)
+    # Load tables
+    dfQ1_lift = spark.table("database.xyz")
+    df02_lift = spark.table("database.pqr")
 
-# Predict probabilities
-y_prob = classifier.predict_proba(X_test)[:, 1]
+    # Display count and column count
+    print("dfQ1_lift", dfQ1_lift.count(), len(dfQ1_lift.columns))
+    print("dfQ2_lift", df02_lift.count(), len(df02_lift.columns))
 
-# Calculate ROC curve
-fpr, tpr, _ = roc_curve(y_test, y_prob)
+    # Show the first 10 rows of the dataframes
+    dfQ1_lift.limit(10).show()
+    df02_lift.limit(10).show()
 
-# Calculate ROC AUC score
-roc_auc = auc(fpr, tpr)
-
-# Create ROC AUC plot
-plt.figure(figsize=(8, 6))
-plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC AUC = {roc_auc:.2f}')
-plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-plt.xlim([0.0, 1.0])
-plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('ROC AUC Curve')
-plt.legend(loc='lower right')
-
-# Add labels
-for i, threshold in enumerate([0.2, 0.5, 0.8]):
-    plt.annotate(f'Threshold = {threshold}', (fpr[i * 100], tpr[i * 100]), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=10)
-
-plt.show()
+# Call the function to execute the code
+compare_lifts()
