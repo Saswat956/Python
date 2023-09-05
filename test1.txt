@@ -1,71 +1,87 @@
-def plot_comparison_box_and_distribution (datal, data2):
-111
-It takes the pandas dataframe as input.
-It creates Boxplot and Distribution plot of the dataframes.
-# Box plot
-plt.figure(figsize=(8, 4))
-pit.boxplot( [datal, data21, labels= ["Quarter 1", "Quarter 2"]) plt.xlabel("Datasets") plt.ylabel("Values")
-plt.title("Box plot for comparison of 02 data with 01 data")
-plt. show()
-# Overlay Distribution Plot
-plt. figure(figsize= (8, 4)) sns.histplot(datal, kde=True, color='blue', label='Quarter 1') sns.histplot (data2, kde-True, color='red', label='Quarter 2') plt.xlabel("Values") plt.ylabel("Density")
-plt.title("Overlay Distribution Plot of Quarter 1 vs Quarter 2")
-plt. legend ()
-plt. show()
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+class DataAnalysis:
+
+    def __init__(self, data1, data2):
+        self.data1 = data1
+        self.data2 = data2
+
+    def plot_comparison_box_and_distribution(self):
+        # Box plot
+        plt.figure(figsize=(8, 4))
+        plt.boxplot([self.data1, self.data2], labels=["Quarter 1", "Quarter 2"])
+        plt.xlabel("Datasets")
+        plt.ylabel("Values")
+        plt.title("Box plot for comparison of 02 data with 01 data")
+        plt.show()
+
+        # Overlay Distribution Plot
+        plt.figure(figsize=(8, 4))
+        sns.histplot(self.data1, kde=True, color='blue', label='Quarter 1')
+        sns.histplot(self.data2, kde=True, color='red', label='Quarter 2')
+        plt.xlabel("Values")
+        plt.ylabel("Density")
+        plt.title("Overlay Distribution Plot of Quarter 1 vs Quarter 2")
+        plt.legend()
+        plt.show()
+
+    @staticmethod
+    def get_stats(data, threshold, quarter):
+        total_data_count = data['ddc_nat_ea2_rndr_npi'].count()
+        above_threshold_count = data[data['above_peer_ratio'] > threshold]['ddc_nat_ea2_rndr_npi'].count()
+        percentage_above_threshold = (above_threshold_count / total_data_count) * 100
+        print(f"Total data in {quarter}: {total_data_count}")
+        print(f"Data with above {threshold} threshold in {quarter}: {above_threshold_count}")
+        print(f"Percentage of unique providers in {quarter} above {threshold} threshold: {percentage_above_threshold:.2f}%")
+
+    @staticmethod
+    def five_number_summary(data_list):
+        result_summary = []
+        for data in data_list:
+            datax = data[data['above_peer_ratio'] > 0.1]['visit_flag'].count()
+            data = data['above_peer_ratio']
+            sorted_data = np.sort(data)
+            q1 = np.percentile(sorted_data, 25)
+            q2 = np.median(sorted_data)
+            q3 = np.percentile(sorted_data, 75)
+            mean = np.mean(sorted_data)
+            count = len(data)
+            min_val = sorted_data[0]
+            max_val = sorted_data[-1]
+            count_abov_peers_ratio = datax
+            summary = {
+                'Minimum': min_val,
+                'Q1 (First Quartile)': q1,
+                'Median (Q2)': q2,
+                'Q3 (Third Quartile)': q3,
+                'Maximum': max_val,
+                'Mean': mean,
+                'Count': count,
+                'Count_abov_peers_ratio': count_abov_peers_ratio
+            }
+            result_summary.append(summary)
+
+        dfx = pd.DataFrame()
+        k = 0
+        quarters = ["Quarter1", "Quarter2"]
+        for summary_data in result_summary:
+            for key, value in summary_data.items():
+                dfx.loc[quarters[k], key] = value
+            k += 1
+        return dfx
+
+# Example usage:
+# data_analysis = DataAnalysis(data1, data2)
+# data_analysis.plot_comparison_box_and_distribution()
+# data_analysis.get_stats(data1, 0.1, "Quarter1")
+# data_analysis.get_stats(data2, 0.1, "Quarter2")
+# summary_df = data_analysis.five_number_summary([data1, data2])
+# print(summary_df)
 
 
-def get_stats (data, threshold, Quarter):
-mimI
-Takes the data as input in form of dataframe and Quarter name in form of 01,02 or Quarter1, Quarter2.
-This function loads the data to dataframe and
-displays the number of unique providers above threshold in a Quarter displays the percentage of unique providers above threshold in a Quarter
-print (f"total data in {Quarter}" ,data.ddc_nat _ea2_rndr_npi.count ( ) )
-print (f'data with 02 above {threshold} threshold" data [data. above_peer_ratio>0.1].ddc_nat_ea2_rndr_npi.count())
-print (f'percentage of unique providers in {Quarter} above {threshold} threshold")
-×=len(list (set (data [data.above_peer_ratio>0.11.ddc_nat_ea2_rndr_npi)))/data.ddc_nat_ea2_rndr_npi.count()
-print (x)
-
-nor_пр1. count ()
-def five_number_summary (data_list):
-Calculate the five-number summary of a dataset.
-Args:
-data_list (list or numpy array): The datasets for which to calculate the summary.
-It takes list of dataframes as argument.
-Returns:
-dict: A dictionary containing the minimum, first quartile (Q1), median (02), third quartile (Q3), and maximum.
-result_summary= []
-# Ensure the data is sorted
-for data in data_list:
-datax=data[data.above_peer_ratio>0.1].visit_flag. count ()
-data=data.above_peer_ratio
-sorted_data = np.sort (data)
-# Calculate quartiles
-q1 = np. percentile (sorted_data, 25)
-q2 = np.median (sorted_data)
-q3 = np.percentile (sorted_data, 75)
-mean=p. mean (sorted data)
-count=len (data)
-# Calculate minimum and maximum
-min_val = sorted_data [0]
-max_val = sorted_data [-1]
-count_abov_peers_ratio = datax
-# Create a dictionary for the summary
-summary = {
-'Minimum': min_val,
-'Q1 (First Quartile)': q1,
-'Median (02)': 92,
-'03 (Third Quartile)': 93,
-'Maximum': max_val,
-'Mean': mean,
-"Count': count,
-'Count_abov_peers_ratio':count_abov_peers_ratio
-result_summary. append (summary)
-dfx=pd.DataFrame ( )
-k=0
-quarter= ["Quarter1", "Quarter2"] for i in result_summary: for i in ikevs):
-dfx. loc [quarter [k],j]=i[jl k=k+1
-dfx return dfx
-return summary
 
 
 
