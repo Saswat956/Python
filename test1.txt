@@ -1,15 +1,49 @@
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
 
-Certainly, here's a reframed version of your request:
+class DataProcessor:
+    def __init__(self):
+        self.spark = SparkSession.builder.appName("DataProcessor").getOrCreate()
 
-"I would like to bring to your attention the challenges I'm currently facing with my Windows laptop, which are impacting my work negatively:
+    def read_data(self, table_name):
+        df = self.spark.table(table_name)
+        print(f"The shape and size of {table_name} is ")
+        print(df.count(), len(df.columns))
+        print(f"The 1st 10 records of {table_name} is ")
+        df.limit(10).show()
+        return df
 
-Frequent sudden reboots causing data loss.
-Reduced battery life (less than 2 hours).
-Persistent overheating, leading to noisy fan and shutdowns during high-computational tasks.
-I'm working in a Linux-based development environment on Disc2, and replicating it on Windows has been challenging. Switching to a MacBook, which is UNIX-based, would simplify local environment replication.
+    def create_indicator_column(self, df01_lift, df02_lift):
+        df01_lift = df01_lift.withColumnRenamed("lift values", "01 lift values")
+        df02_lift = df02_lift.withColumnRenamed("lift values", "02 lift values")
+        dfQ1_lift = df01_lift.withColumnRenamed("age_brackets", "age_brackets1")
+        df01_lift = df01_lift.withColumnRenamed("col name", "col_name1")
+        dfQ1_lift = dfQ1_lift.withColumnRenamed("label", "label1")
+        joined_df = df01_lift.join(
+            df02_lift,
+            (df01_lift["age_brackets1"] == df02_lift["age_brackets"]) &
+            (df01_lift["col_name1"] == df02_lift["col_name1"]) &
+            (df01_lift["label1"] == df02_lift["label1"]),
+            "outer"
+        )
+        joined_df = joined_df.withColumn(
+            "Null_indicator",
+            F.when(F.col("label1").isNull(), "01_null") \
+                .when(F.col("label1").isNotNull(), "02_null") \
+                .otherwise("Not_null")
+        )
+        joined_df = joined_df.select(
+            ['age_brackets1', 'col_name1', 'label1', '01_lift_values', '02_lift_values', 'Null_indicator']
+        )
+        joined_df = joined_df.filter(joined_df["label1"].contains("ind_")).sort("age_brackets1")
+        joined_df = joined_df.withColumn(
+            'drift_flag',
+            F.when((F.col("01_lift_values") >= 1.15) & (F.col("02_lift_values") <= 0.85), "Negative drift") |
+            F.when((F.col("01_lift_values") < -0.85) & (F.col("02_lift_values") >= 1.15), "Positive drift") |
+            F.otherwise("No drifts")
+        )
+        joined_df.show()
+        return joined_df
 
-Given our primary work on AWS, migrating from Windows to AWS is time-consuming.
-
-Despite multiple updates, both VS Code and other IDEs frequently hang.
-
-I kindly request approval to switch to a MacBook, as it would significantly alleviate these issues and improve my productivity
+    def indicator_count(self, joined_df):
+        joined_df.groupBy(['drift_flag', 'Null_indicator']).count().show()
