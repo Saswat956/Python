@@ -1,85 +1,53 @@
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+from sklearn.metrics import confusion_matrix, roc_curve, auc
 
-class DataAnalysis:
+class MetricsCalculator:
 
-    def __init__(self, data1, data2):
-        self.data1 = data1
-        self.data2 = data2
+    def __init__(self, data):
+        self.data = data
 
-    def plot_comparison_box_and_distribution(self):
-        # Box plot
-        plt.figure(figsize=(8, 4))
-        plt.boxplot([self.data1, self.data2], labels=["Quarter 1", "Quarter 2"])
-        plt.xlabel("Datasets")
-        plt.ylabel("Values")
-        plt.title("Box plot for comparison of 02 data with 01 data")
-        plt.show()
+    def calculate_metrics(self):
+        roc_dict_train = {}
+        age_grps = list(self.data.select('age_brackets').drop_duplicates().toPandas()["age_brackets"].values)
 
-        # Overlay Distribution Plot
-        plt.figure(figsize=(8, 4))
-        sns.histplot(self.data1, kde=True, color='blue', label='Quarter 1')
-        sns.histplot(self.data2, kde=True, color='red', label='Quarter 2')
-        plt.xlabel("Values")
-        plt.ylabel("Density")
-        plt.title("Overlay Distribution Plot of Quarter 1 vs Quarter 2")
-        plt.legend()
-        plt.show()
+        for age_ in age_grps:
+            ly = np.array(self.data.filter(F.col('age_brackets') == age_).select('binary_label').toPandas()['binary_label'])
+            flag = np.array(self.data.filter(F.col('age_brackets') == age_).select('flag_multipler').toPandas()['flag_multipler'])
+            tn, fp, fn, tp = confusion_matrix(ly, flag).ravel()
+
+            # Calculate ROC curve
+            fpr, tpr, _ = roc_curve(ly, flag)
+
+            # Calculate ROC AUC score
+            roc_auc = auc(fpr, tpr)
+            Precision = tp / (tp + fp)
+            Recall = tp / (tp + fn)
+
+            roc_dict_train[age_ + '_precision'] = round(Precision, 2)
+            roc_dict_train[age_ + '_recall'] = round(Recall, 2)
+            roc_dict_train[age_ + '_roc_auc'] = roc_auc
+            roc_dict_train[age_ + '_fpr'] = fpr
+            roc_dict_train[age_ + '_tpr'] = tpr
+
+        ly = np.array(self.data.select('binary_label').toPandas()['binary_label'])
+        flag = np.array(self.data.select('flag_multipler').toPandas()['flag_multipler'])
+        tn, fp, fn, tp = confusion_matrix(ly, flag).ravel()
+
+        Precision = tp / (tp + fp)
+        Recall = tp / (tp + fn)
+
+        roc_dict_train['overall_precision'] = round(Precision, 2)
+        roc_dict_train['overall_recall'] = round(Recall, 2)
+        roc_dict_train['overall_roc_auc'] = auc(fpr, tpr)
+        roc_dict_train['overall_fpr'] = fpr
+        roc_dict_train['overall_tpr'] = tpr
+
+        return roc_dict_train
 
     @staticmethod
-    def get_stats(data, threshold, quarter):
-        total_data_count = data['ddc_nat_ea2_rndr_npi'].count()
-        above_threshold_count = data[data['above_peer_ratio'] > threshold]['ddc_nat_ea2_rndr_npi'].count()
-        percentage_above_threshold = (above_threshold_count / total_data_count) * 100
-        print(f"Total data in {quarter}: {total_data_count}")
-        print(f"Data with above {threshold} threshold in {quarter}: {above_threshold_count}")
-        print(f"Percentage of unique providers in {quarter} above {threshold} threshold: {percentage_above_threshold:.2f}%")
-
-    @staticmethod
-    def five_number_summary(data_list):
-        result_summary = []
-        for data in data_list:
-            datax = data[data['above_peer_ratio'] > 0.1]['visit_flag'].count()
-            data = data['above_peer_ratio']
-            sorted_data = np.sort(data)
-            q1 = np.percentile(sorted_data, 25)
-            q2 = np.median(sorted_data)
-            q3 = np.percentile(sorted_data, 75)
-            mean = np.mean(sorted_data)
-            count = len(data)
-            min_val = sorted_data[0]
-            max_val = sorted_data[-1]
-            count_abov_peers_ratio = datax
-            summary = {
-                'Minimum': min_val,
-                'Q1 (First Quartile)': q1,
-                'Median (Q2)': q2,
-                'Q3 (Third Quartile)': q3,
-                'Maximum': max_val,
-                'Mean': mean,
-                'Count': count,
-                'Count_abov_peers_ratio': count_abov_peers_ratio
-            }
-            result_summary.append(summary)
-
-        dfx = pd.DataFrame()
-        k = 0
-        quarters = ["Quarter1", "Quarter2"]
-        for summary_data in result_summary:
-            for key, value in summary_data.items():
-                dfx.loc[quarters[k], key] = value
-            k += 1
-        return dfx
-
-# Example usage:
-# data_analysis = DataAnalysis(data1, data2)
-# data_analysis.plot_comparison_box_and_distribution()
-# data_analysis.get_stats(data1, 0.1, "Quarter1")
-# data_analysis.get_stats(data2, 0.1, "Quarter2")
-# summary_df = data_analysis.five_number_summary([data1, data2])
-# print(summary_df)
+    def create_metrics_dataframe(metrics_dict):
+        df = pd.DataFrame(metrics_dict.items(), columns=['Metric', 'Value'])
+        return df
 
 
 
