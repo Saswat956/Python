@@ -1,49 +1,73 @@
-from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
+def plot_comparison_box_and_distribution (datal, data2):
+111
+It takes the pandas dataframe as input.
+It creates Boxplot and Distribution plot of the dataframes.
+# Box plot
+plt.figure(figsize=(8, 4))
+pit.boxplot( [datal, data21, labels= ["Quarter 1", "Quarter 2"]) plt.xlabel("Datasets") plt.ylabel("Values")
+plt.title("Box plot for comparison of 02 data with 01 data")
+plt. show()
+# Overlay Distribution Plot
+plt. figure(figsize= (8, 4)) sns.histplot(datal, kde=True, color='blue', label='Quarter 1') sns.histplot (data2, kde-True, color='red', label='Quarter 2') plt.xlabel("Values") plt.ylabel("Density")
+plt.title("Overlay Distribution Plot of Quarter 1 vs Quarter 2")
+plt. legend ()
+plt. show()
 
-class DataProcessor:
-    def __init__(self):
-        self.spark = SparkSession.builder.appName("DataProcessor").getOrCreate()
 
-    def read_data(self, table_name):
-        df = self.spark.table(table_name)
-        print(f"The shape and size of {table_name} is ")
-        print(df.count(), len(df.columns))
-        print(f"The 1st 10 records of {table_name} is ")
-        df.limit(10).show()
-        return df
+def get_stats (data, threshold, Quarter):
+mimI
+Takes the data as input in form of dataframe and Quarter name in form of 01,02 or Quarter1, Quarter2.
+This function loads the data to dataframe and
+displays the number of unique providers above threshold in a Quarter displays the percentage of unique providers above threshold in a Quarter
+print (f"total data in {Quarter}" ,data.ddc_nat _ea2_rndr_npi.count ( ) )
+print (f'data with 02 above {threshold} threshold" data [data. above_peer_ratio>0.1].ddc_nat_ea2_rndr_npi.count())
+print (f'percentage of unique providers in {Quarter} above {threshold} threshold")
+×=len(list (set (data [data.above_peer_ratio>0.11.ddc_nat_ea2_rndr_npi)))/data.ddc_nat_ea2_rndr_npi.count()
+print (x)
 
-    def create_indicator_column(self, df01_lift, df02_lift):
-        df01_lift = df01_lift.withColumnRenamed("lift values", "01 lift values")
-        df02_lift = df02_lift.withColumnRenamed("lift values", "02 lift values")
-        dfQ1_lift = df01_lift.withColumnRenamed("age_brackets", "age_brackets1")
-        df01_lift = df01_lift.withColumnRenamed("col name", "col_name1")
-        dfQ1_lift = dfQ1_lift.withColumnRenamed("label", "label1")
-        joined_df = df01_lift.join(
-            df02_lift,
-            (df01_lift["age_brackets1"] == df02_lift["age_brackets"]) &
-            (df01_lift["col_name1"] == df02_lift["col_name1"]) &
-            (df01_lift["label1"] == df02_lift["label1"]),
-            "outer"
-        )
-        joined_df = joined_df.withColumn(
-            "Null_indicator",
-            F.when(F.col("label1").isNull(), "01_null") \
-                .when(F.col("label1").isNotNull(), "02_null") \
-                .otherwise("Not_null")
-        )
-        joined_df = joined_df.select(
-            ['age_brackets1', 'col_name1', 'label1', '01_lift_values', '02_lift_values', 'Null_indicator']
-        )
-        joined_df = joined_df.filter(joined_df["label1"].contains("ind_")).sort("age_brackets1")
-        joined_df = joined_df.withColumn(
-            'drift_flag',
-            F.when((F.col("01_lift_values") >= 1.15) & (F.col("02_lift_values") <= 0.85), "Negative drift") |
-            F.when((F.col("01_lift_values") < -0.85) & (F.col("02_lift_values") >= 1.15), "Positive drift") |
-            F.otherwise("No drifts")
-        )
-        joined_df.show()
-        return joined_df
+nor_пр1. count ()
+def five_number_summary (data_list):
+Calculate the five-number summary of a dataset.
+Args:
+data_list (list or numpy array): The datasets for which to calculate the summary.
+It takes list of dataframes as argument.
+Returns:
+dict: A dictionary containing the minimum, first quartile (Q1), median (02), third quartile (Q3), and maximum.
+result_summary= []
+# Ensure the data is sorted
+for data in data_list:
+datax=data[data.above_peer_ratio>0.1].visit_flag. count ()
+data=data.above_peer_ratio
+sorted_data = np.sort (data)
+# Calculate quartiles
+q1 = np. percentile (sorted_data, 25)
+q2 = np.median (sorted_data)
+q3 = np.percentile (sorted_data, 75)
+mean=p. mean (sorted data)
+count=len (data)
+# Calculate minimum and maximum
+min_val = sorted_data [0]
+max_val = sorted_data [-1]
+count_abov_peers_ratio = datax
+# Create a dictionary for the summary
+summary = {
+'Minimum': min_val,
+'Q1 (First Quartile)': q1,
+'Median (02)': 92,
+'03 (Third Quartile)': 93,
+'Maximum': max_val,
+'Mean': mean,
+"Count': count,
+'Count_abov_peers_ratio':count_abov_peers_ratio
+result_summary. append (summary)
+dfx=pd.DataFrame ( )
+k=0
+quarter= ["Quarter1", "Quarter2"] for i in result_summary: for i in ikevs):
+dfx. loc [quarter [k],j]=i[jl k=k+1
+dfx return dfx
+return summary
 
-    def indicator_count(self, joined_df):
-        joined_df.groupBy(['drift_flag', 'Null_indicator']).count().show()
+
+
+
+
