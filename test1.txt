@@ -1,53 +1,29 @@
-import numpy as np
-from sklearn.metrics import confusion_matrix, roc_curve, auc
+import boto3
+import botocore
 
-class MetricsCalculator:
+# Create an S3 client
+s3 = boto3.client('s3')
 
-    def __init__(self, data):
-        self.data = data
+# Specify the S3 bucket and object (file) key you want to read
+bucket_name = 'your_bucket_name'
+object_key = 'path/to/your/file.txt'
 
-    def calculate_metrics(self):
-        roc_dict_train = {}
-        age_grps = list(self.data.select('age_brackets').drop_duplicates().toPandas()["age_brackets"].values)
+try:
+    # Attempt to download the file from S3
+    response = s3.get_object(Bucket=bucket_name, Key=object_key)
 
-        for age_ in age_grps:
-            ly = np.array(self.data.filter(F.col('age_brackets') == age_).select('binary_label').toPandas()['binary_label'])
-            flag = np.array(self.data.filter(F.col('age_brackets') == age_).select('flag_multipler').toPandas()['flag_multipler'])
-            tn, fp, fn, tp = confusion_matrix(ly, flag).ravel()
+    # Read the content of the file
+    file_content = response['Body'].read().decode('utf-8')
 
-            # Calculate ROC curve
-            fpr, tpr, _ = roc_curve(ly, flag)
+    # Print or process the file content as needed
+    print(file_content)
 
-            # Calculate ROC AUC score
-            roc_auc = auc(fpr, tpr)
-            Precision = tp / (tp + fp)
-            Recall = tp / (tp + fn)
+except botocore.exceptions.ClientError as e:
+    if e.response['Error']['Code'] == "NoSuchKey":
+        print("The object does not exist.")
+    else:
+        print("An error occurred:", e)
 
-            roc_dict_train[age_ + '_precision'] = round(Precision, 2)
-            roc_dict_train[age_ + '_recall'] = round(Recall, 2)
-            roc_dict_train[age_ + '_roc_auc'] = roc_auc
-            roc_dict_train[age_ + '_fpr'] = fpr
-            roc_dict_train[age_ + '_tpr'] = tpr
-
-        ly = np.array(self.data.select('binary_label').toPandas()['binary_label'])
-        flag = np.array(self.data.select('flag_multipler').toPandas()['flag_multipler'])
-        tn, fp, fn, tp = confusion_matrix(ly, flag).ravel()
-
-        Precision = tp / (tp + fp)
-        Recall = tp / (tp + fn)
-
-        roc_dict_train['overall_precision'] = round(Precision, 2)
-        roc_dict_train['overall_recall'] = round(Recall, 2)
-        roc_dict_train['overall_roc_auc'] = auc(fpr, tpr)
-        roc_dict_train['overall_fpr'] = fpr
-        roc_dict_train['overall_tpr'] = tpr
-
-        return roc_dict_train
-
-    @staticmethod
-    def create_metrics_dataframe(metrics_dict):
-        df = pd.DataFrame(metrics_dict.items(), columns=['Metric', 'Value'])
-        return df
 
 
 
