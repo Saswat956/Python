@@ -1,0 +1,57 @@
+Abstract
+---------------------------------------------------------
+
+
+
+The paragraph provides an overview of the challenges in generating synthetic text data with formal privacy guarantees, particularly in the context of large language models (LLMs) like GPT-3.5. It highlights the introduction of the Private Evolution (PE) algorithm by Lin et al., which leverages API access to diffusion models for generating differential privacy (DP) synthetic images. Building on this concept, the authors propose an augmented version called AUGPE, tailored for generating DP synthetic text using API access to LLMs. The paragraph outlines the experimental validation of AUGPE on benchmark datasets, showing its competitive performance compared to existing DP fine-tuning methods. It emphasizes the potential of AUGPE in facilitating more accessible privacy-preserving LLM applications.
+
+
+Introduction
+----------------------------------------------------------
+
+The literature review highlights the significance of text-based applications enabled by recent advances in natural language processing (NLP) and the associated privacy concerns due to the collection of private text data. It introduces differentially private synthetic text generation as a promising solution to protect privacy while enabling the development of downstream NLP systems and facilitating safe data sharing. The existing state-of-the-art approach involves fine-tuning pretrained generative language models (LMs) with differential privacy (DP) variants of stochastic gradient descent (SGD). However, this method faces limitations, especially with newer and more powerful LLMs that are accessible only through APIs or are resource-intensive to fine-tune with DP.
+
+A recent framework called Private Evolution (PE) offers an alternative by leveraging foundation models and API access to generate DP synthetic data without model training. While initially developed for images, extending PE to text presents challenges due to the discrete nature of text data and varying lengths. The literature proposes an augmented PE algorithm (AUG-PE) designed specifically for text generation, incorporating new techniques for generating diverse and high-quality text samples from LLMs.
+
+The contributions of the proposed AUG-PE algorithm include practical implementation on various datasets and LLMs, comprehensive evaluations demonstrating competitive performance compared to DP fine-tuning baselines, and insights into its properties such as text length distribution and compatibility with different LLMs. AUG-PE shows promise in improving the efficiency and effectiveness of DP synthetic text generation, particularly with more powerful LLMs and open-source models where DP fine-tuning is challenging.
+
+Differential Privacy (DP) ensures that the output of a randomized mechanism remains consistent regardless of whether individual data records are included or not. DP is defined by parameters (ε, δ), where ε controls the privacy loss and δ provides a probabilistic guarantee. DP synthetic text generation methods aim to maintain DP for private training data. This can be achieved through techniques like DP-SGD during model training or by fine-tuning pretrained generative language models with DP-SGD, followed by synthetic text generation.
+
+However, fine-tuning state-of-the-art large language models (LLMs) like GPT-4 or GPT-3.5 with DP is impractical due to inaccessible model weights or resource-intensive processes even for open-source LLMs like LLaMA. DP-SGD further complicates the process due to challenges in per-sample gradient calculations. To address these issues, API-based methods for DP synthetic text generation are explored, requiring only model inference and applicable regardless of LLM accessibility.
+
+Differential Privacy (DP) ensures that the output of a randomized mechanism remains consistent regardless of whether individual data records are included or not. DP is defined by parameters (ε, δ), where ε controls the privacy loss and δ provides a probabilistic guarantee. DP synthetic text generation methods aim to maintain DP for private training data. This can be achieved through techniques like DP-SGD during model training or by fine-tuning pretrained generative language models with DP-SGD, followed by synthetic text generation.
+
+However, fine-tuning state-of-the-art large language models (LLMs) like GPT-4 or GPT-3.5 with DP is impractical due to inaccessible model weights or resource-intensive processes even for open-source LLMs like LLaMA. DP-SGD further complicates the process due to challenges in per-sample gradient calculations. To address these issues, API-based methods for DP synthetic text generation are explored, requiring only model inference and applicable regardless of LLM accessibility.
+
+
+
+
+
+The Private Evolution (PE) algorithm, proposed as an alternative to DP fine-tuning for generating differentially private synthetic data, primarily relies on APIs of pretrained models, making it easier to implement and deploy, especially leveraging API-based models. PE operates by first generating random samples from a foundation model and then iteratively refining these samples to match private data characteristics. While the original PE framework is versatile across modalities, its application to text faces unique challenges.
+
+Textual data introduces complexities such as varying lengths and unique quality requirements. The original PE algorithm, primarily designed for images, does not adequately address these challenges for text. In response, an augmented version, AUG-PE, is proposed specifically for text generation. AUG-PE refines each component of the PE algorithm to enhance the diversity and quality of text generation.
+
+The overview of AUG-PE involves generating random samples from a language model, iteratively refining synthetic samples towards private data characteristics, and utilizing prompts to guide the generation process. Unlike images with fixed dimensions, text data's variable length necessitates tailored approaches for effective generation. AUG-PE incorporates algorithmic innovations to address these challenges and improve the overall quality of synthetic text generation.
+
+RANDOM_API is a pivotal component of the text generation process within the AUG-PE algorithm. Leveraging the strong instruction-following capability of large language models (LLMs), prompts are directly utilized to generate samples. In line with the approach proposed by Yue et al. (2023), class labels are assumed to be non-private, and thus, they are included in the prompt (e.g., "restaurant" in Fig. 2). To promote diverse generation, a pseudo-class approach is introduced. This involves generating a list of subcategories for each class from a specific LLM, such as GPT-3.5, and randomly selecting one subcategory as the keyword to include in the prompt for each generation. For instance, for the "restaurant" class, subcategories like "Steakhouse" or "Bistros" could be randomly sampled as keywords for diversity.
+
+As for VARIATION_API, responsible for generating variations of a given text sample, it is noted that unlike image diffusion models employed in previous work (Lin et al., 2024), off-the-shelf variation APIs are not readily available for text models. Instead, the instruction-following capability of LLMs is harnessed to implement this functionality via prompting. Two variation methods, paraphrasing, and fill-in-the-blanks, are proposed. For paraphrasing, a prompt like "Please rephrase the below sentences: {input}" is used. For fill-in-the-blanks, a certain percentage of tokens in the input are masked as blanks, resulting in masked_input, and a prompt like "Please fill in the blanks for the below sentences: {masked_input}" is employed. Additionally, to enhance the diversity of generated variations, tone candidates (e.g., "in a creative way", "in a professional style") are created, and one tone is randomly subsampled and added to the prompt for each generation. This approach aims to improve the quality and diversity of generated variations through in-context learning and tone variation.
+
+
+
+
+
+In the VARIATION_API component of AUG-PE, the challenge of accommodating varying text lengths in real-world datasets, typically characterized by a fat-tailed distribution where most samples are short but a few are long, is addressed. Unlike DP-finetuning-based approaches, which require setting a large max token length to capture long texts accurately but incur high computation costs, AUG-PE adjusts per-sample max_token adaptively to balance fidelity and cost. This adaptation is achieved by specifying the desired word count in the generation prompt and modifying it based on the original word count, Gaussian noise variance, and a minimal targeted word value. Additionally, embeddings calculation and the generation of DP nearest neighbor histograms are conducted using off-the-shelf text embedding models, with synthetic sample embeddings defined either by their self-embedding or the averaged embedding from variations. Gaussian noise is added to each histogram bin to ensure differential privacy.
+
+In sample selection and generation, AUG-PE introduces enhancements to generate more diverse and high-quality synthetic text. These include ranking synthetic samples based on their probability and selecting only the top samples to prevent redundancy, generating multiple variations for each selected sample to create a larger and more diverse dataset for subsequent iterations, and increasing the size of the initial dataset to match the expanded size of the subsequent dataset. To retain high-quality samples, selected samples are included in the next iteration's dataset, and for large variations produced by the variation API, the nearest neighbor voting is performed on the self-embedding of synthetic samples.
+
+Privacy analysis of AUG-PE follows the original PE approach, with each private sample contributing one vote to a histogram bin, and privacy ensured through the addition of Gaussian noise. The adaptive DP composition theorem is applied to track privacy loss across iterations. These enhancements position AUG-PE as a more effective method for generating diverse and high-quality synthetic text while maintaining privacy guarantees.
+
+
+
+
+
+
+
+
+
