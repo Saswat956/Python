@@ -1,0 +1,27 @@
+from office365.runtime.auth.authentication_context import AuthenticationContext
+from office365.sharepoint.client_context import ClientContext
+
+# Define SharePoint URL and authentication credentials
+sharepoint_url = "https://xyz.sharepoint.com"
+client_id = "Xyz"
+client_secret = "pqr"
+tenant_id = "mno"
+
+# Authenticate with SharePoint using client credentials
+ctx_auth = AuthenticationContext(sharepoint_url)
+ctx_auth.acquire_token_for_app(client_id, client_secret)
+
+# Create a client context object
+ctx = ClientContext(sharepoint_url, ctx_auth)
+
+# Specify the SharePoint URL for the file
+file_url = "https://xyz.sharepoint.com/sites/it/EA_team/pqr/"
+
+# Load the files in the folder
+files = ctx.web.get_folder_by_server_relative_url(file_url).files
+ctx.load(files)
+ctx.execute_query()
+
+# Print the names of the files in the folder
+for file in files:
+    print(file.properties["Name"])
